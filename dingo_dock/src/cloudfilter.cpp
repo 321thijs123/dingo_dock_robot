@@ -227,13 +227,6 @@ public:
 
 					br.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "front_mount", "platform_" + std::to_string(num)));
 
-					//transform.setOrigin(tf::Vector3(middel_platform, 0, 0));
-					
-					//q.setRPY(0, 0, 0);
-					//transform.setRotation(q);
-
-					//br.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "leg_pair_pair_" + std::to_string(num), "platform_" + std::to_string(num)));
-
 					num++;
 
 					leg_pairs.erase(leg_pairs.begin()+i);
@@ -252,7 +245,8 @@ public:
 	{
 		double startTime = ros::Time::now().toSec();
 		sensor_msgs::PointCloud cloud;
-
+		
+		//Convert pointcloud2 to pointcloud, easier to work with
 		convertPointCloud2ToPointCloud(msg, cloud);
 
 		sensor_msgs::PointCloud layer_cloud;
@@ -260,21 +254,23 @@ public:
 		sensor_msgs::PointCloud object_cloud;
 		sensor_msgs::PointCloud group_cloud;
 
+		// Give all clouds same header so time is correct and rviz doesn't complain
 		layer_cloud.header = direction_cloud.header = object_cloud.header = group_cloud.header = cloud.header;
 
-		layer_cloud.points = filterLayers(cloud.points);
-		direction_cloud.points = filterDirection(layer_cloud.points);
-		object_cloud.points = filterObjects(direction_cloud.points);
-		group_cloud.points = getGroups(object_cloud.points);
+		layer_cloud.points = filterLayers(cloud.points);				//Take a slice of the world so we only look at the heights at which we expect the platform
+		direction_cloud.points = filterDirection(layer_cloud.points);	//Only look in front of the robot
+		object_cloud.points = filterObjects(direction_cloud.points);	//Find groups of points
+		group_cloud.points = getGroups(object_cloud.points);			//Throw away small groups and get center of groups (Average X & Y)
 
-		layer_pub.publish(layer_cloud);
+		layer_pub.publish(layer_cloud);				//Publish each pointcloud step for debugging purposes
 		direction_pub.publish(direction_cloud);
 		object_pub.publish(object_cloud);
 		group_pub.publish(group_cloud);
 
-		std::vector<geometry_msgs::Point32> leg_pairs = getLegPairs(group_cloud.points);
-		std::vector<geometry_msgs::Point32> platforms = getPlatforms(leg_pairs);
+		std::vector<geometry_msgs::Point32> leg_pairs = getLegPairs(group_cloud.points);	//Find groups at correct distance to be a pair of legs (Side by side)
+		std::vector<geometry_msgs::Point32> platforms = getPlatforms(leg_pairs);			//Find leg_pairs that are at the correct distance to be a platform
 
+		// Output for debugging
 		system("clear");
 		std::cout <<"------------------\n" << 
 					"Input pts: " << cloud.points.size() << "\n" <<
@@ -305,8 +301,6 @@ private:
 
 	const float x_min_leg_distance = 0.540*0.540;		//Minimum distance (front to back) between two possible leg pairs to be the same platform (Squared to avoid square root for pythagoras)
 	const float x_max_leg_distance = 0.600*0.600;		//Maximum distance (front to back) between two possible leg pairs to be the same platform (Squared to avoid square root for pythagoras)
-
-	const float middel_platform = 0.025;		//
 };
 
 int main(int argc, char **argv)
