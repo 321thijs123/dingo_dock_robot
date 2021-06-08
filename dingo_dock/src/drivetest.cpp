@@ -1,7 +1,7 @@
 #include <ros/ros.h>
 #include <geometry_msgs/Twist.h>
 #include <tf/transform_listener.h>
-
+#include "helpers/dingo_exception.cpp"
 #define M_PI 3.14159265358979323846
 
 double determineDirection(tf::StampedTransform tf_platform, tf::StampedTransform tf_robot)
@@ -162,6 +162,18 @@ int main(int argc, char **argv)
 
 		if (msg.linear.x > 0.5) msg.linear.x = 0.5;
 
+		// error states
+		
+		bool underPlatform;
+		
+		if (platformDistance < 0.3) underPlatform = true;
+		
+		// 		
+		if (underPlatform && ( abs(yawDiff) > 5 * M_PI / 180)  )	
+		{
+			throw(DingoException("Dingo tried to turn around under platform", 0, 148)); // error: dingo turning under platform, error number = 0, linenumber = 148
+		}	
+
 		system("clear");
 
 		std::cout << "\n----------------\n"
@@ -172,6 +184,7 @@ int main(int argc, char **argv)
 				"center distance: " << platformCenterDistance << "\n" <<
 				"angular:         " << msg.angular.z << "\n" <<
 				"linear:          " << msg.linear.x << "\n" <<
+				"under platform:  " << underPlatform << "\n" <<
 				"----------------\n";
 
 		cmd_vel_pub.publish(msg);
