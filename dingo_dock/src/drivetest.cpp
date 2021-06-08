@@ -112,7 +112,7 @@ int main(int argc, char **argv)
 		try
 		{
 			listener.lookupTransform("odom", "platform_0", ros::Time(0), tf_platform);
-			
+
 		}
 		catch (tf::TransformException &ex){}
 
@@ -139,12 +139,12 @@ int main(int argc, char **argv)
 		{
 			targetDirection = yaw_platform;
 		}
-		
+
 		double yawDiff = targetDirection - yaw_robot;
 
 		msg.angular.z = (yawDiff) * 5.0;
 
-		if (platformDistance > 0.12)
+		if (platformDistance > 0.5)
 		{
 			if (abs(yawDiff) < 1.0/50.0)
 			{
@@ -156,7 +156,7 @@ int main(int argc, char **argv)
 		}
 		else
 		{
-			msg.linear.x = platformCenterDistance * 1.5;
+			msg.linear.x = platformCenterDistance * 1.0;
 		}
 
 
