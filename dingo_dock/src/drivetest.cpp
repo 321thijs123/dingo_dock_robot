@@ -91,8 +91,10 @@ int main(int argc, char **argv)
 		rate.sleep();
 	}
 
+	bool done = false;
+
 	// Driving under platform
-	while (ros::ok())
+	while (ros::ok() && !done)
 	{
 
 		geometry_msgs::Twist msg;
@@ -155,6 +157,9 @@ int main(int argc, char **argv)
 		// difference between current yaw and target yaw
 		double yawDiff = targetDirection - yaw_robot;
 
+		if(yawDiff > M_PI) yawDiff -= 2*M_PI;
+		if(yawDiff < -M_PI) yawDiff += 2*M_PI;
+
 		// The rotation speed of the robot is calculated here (P controller)
 		msg.angular.z = (yawDiff) * 5.0;
 
@@ -184,7 +189,11 @@ int main(int argc, char **argv)
 		if (msg.linear.x > 0.5) msg.linear.x = 0.5;
 
 		//Limit Angular velocity
-	//	if (msg.angular.z > 1) msg.angular.z = 1;
+		if (msg.angular.z > 2) msg.angular.z = 2;
+		if (msg.angular.z < -2) msg.angular.z = -2;
+
+		// Checks if program is done
+		if (platformCenterDistance < 0.005) done = true; 
 
 		// error states
 
