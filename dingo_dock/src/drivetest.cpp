@@ -2,6 +2,7 @@
 #include <geometry_msgs/Twist.h>
 #include <tf/transform_listener.h>
 #include "helpers/dingo_exception.cpp"
+#include <std_msgs/Float32.h>
 #define M_PI 3.14159265358979323846
 
 // Determines the platform direction relative to the robot 
@@ -45,6 +46,16 @@ int main(int argc, char **argv)
 	ros::NodeHandle n;
 
 	ros::Publisher cmd_vel_pub = n.advertise<geometry_msgs::Twist>("cmd_vel", 20);
+	ros::Publisher platform_direction_pub = n.advertise<std_msgs::Float32>("drivetest/platform_direction", 20);
+	ros::Publisher target_direction_pub = n.advertise<std_msgs::Float32>("drivetest/target_direction", 20);
+	ros::Publisher yawDiff_pub = n.advertise<std_msgs::Float32>("drivetest/yawDiff", 20);
+	ros::Publisher yaw_robot_pub = n.advertise<std_msgs::Float32>("drivetest/yaw_robot", 20);
+	ros::Publisher yaw_platform_pub = n.advertise<std_msgs::Float32>("drivetest/yaw_platform", 20);
+	ros::Publisher platform_distance_pub = n.advertise<std_msgs::Float32>("drivetest/distance", 20);
+	ros::Publisher platform_center_distance_pub = n.advertise<std_msgs::Float32>("drivetest/center_distance", 20);
+	ros::Publisher angular_pub = n.advertise<std_msgs::Float32>("drivetest/angular", 20);
+	ros::Publisher linear_pub = n.advertise<std_msgs::Float32>("drivetest/linear", 20);
+	ros::Publisher under_platform_pub = n.advertise<std_msgs::Float32>("drivetest/under_platform", 20);
 
 	tf::TransformListener listener;
 	
@@ -134,7 +145,13 @@ int main(int argc, char **argv)
 			// if the robot is within 12 cm keep straight 
 			targetDirection = yaw_platform;
 		}
+
+		if (targetDirection < -M_PI) targetDirection += 2*M_PI;
+		if (targetDirection > M_PI) targetDirection -= 2*M_PI;
 		
+		if (yaw_robot > M_PI) yaw_robot -= 2*M_PI;
+		if (yaw_robot < -M_PI) yaw_robot += 2*M_PI;
+
 		// difference between current yaw and target yaw
 		double yawDiff = targetDirection - yaw_robot;
 
@@ -166,6 +183,9 @@ int main(int argc, char **argv)
 		//Limit linear velocity
 		if (msg.linear.x > 0.5) msg.linear.x = 0.5;
 
+		//Limit Angular velocity
+	//	if (msg.angular.z > 1) msg.angular.z = 1;
+
 		// error states
 
 		// check if robot is under platform
@@ -184,13 +204,49 @@ int main(int argc, char **argv)
 		std::cout << "\n----------------\n"
 				"platform dir:    " << platform_direction << "\n" <<
 				"target dir:      " << targetDirection << "\n" <<
+				"yawDiff:         " << yawDiff << "\n" <<
 				"cur dir:         " << yaw_robot << "\n" <<
+				"yaw platform:    " << yaw_platform << "\n" <<
 				"distance:        " << platformDistance << "\n" <<
 				"center distance: " << platformCenterDistance << "\n" <<
 				"angular:         " << msg.angular.z << "\n" <<
 				"linear:          " << msg.linear.x << "\n" <<
 				"under platform:  " << underPlatform << "\n" <<
 				"----------------\n";
+
+		//publish debugging info
+		std_msgs::Float32 platform_direction_msg;
+		std_msgs::Float32 target_direction_msg;
+		std_msgs::Float32 yawDiff_msg;
+		std_msgs::Float32 yaw_robot_msg;
+		std_msgs::Float32 yaw_platform_msg;
+		std_msgs::Float32 platform_distance_msg;
+		std_msgs::Float32 platform_center_distance_msg;
+		std_msgs::Float32 angular_msg;
+		std_msgs::Float32 linear_msg;
+		std_msgs::Float32 under_platform_msg;
+
+		platform_direction_msg.data = platform_direction;
+		target_direction_msg.data = targetDirection;
+		yawDiff_msg.data = yawDiff;
+		yaw_robot_msg.data = yaw_robot;
+		yaw_platform_msg.data = yaw_platform;
+		platform_distance_msg.data = platformDistance;
+		platform_center_distance_msg.data = platformCenterDistance;
+		angular_msg.data = msg.angular.z;
+		linear_msg.data = msg.linear.x;
+		under_platform_msg.data = underPlatform;
+
+		platform_direction_pub.publish(platform_direction_msg);
+		target_direction_pub.publish(target_direction_msg);
+		yawDiff_pub.publish(yawDiff_msg);
+		yaw_robot_pub.publish(yaw_robot_msg);
+		yaw_platform_pub.publish(yaw_platform_msg);
+		platform_distance_pub.publish(platform_distance_msg);
+		platform_center_distance_pub.publish(platform_center_distance_msg);
+		angular_pub.publish(angular_msg);
+		linear_pub.publish(linear_msg);
+		under_platform_pub.publish(under_platform_msg);
 
 		//Publish velocity commands
 		cmd_vel_pub.publish(msg);
