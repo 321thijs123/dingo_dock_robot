@@ -1,8 +1,8 @@
+
 #include <ros/ros.h>
 #include <tf/transform_broadcaster.h>
 #include <sensor_msgs/point_cloud_conversion.h>
 #include <vector>
-
 
 class CloudFilter
 {
@@ -183,11 +183,10 @@ public:
 				}
 			}
 		}
-		
-		
+
 		return leg_pairs;
 	}
-	
+
 	// Find platforms and publish transforms
 	std::vector<geometry_msgs::Point32> getPlatforms(std::vector<geometry_msgs::Point32> leg_pairs)
 	{
@@ -196,6 +195,11 @@ public:
 		int num = 0;
 
 		std::vector<geometry_msgs::Point32> platforms = {};
+
+	
+		// order the leg_pairs array by distance so leg_pair_0 is the most close to the dingo
+		std::sort(leg_pairs.begin(), leg_pairs.end(), [](geometry_msgs::Point32 const & a, geometry_msgs::Point32 const & b){
+			return sqrt((a.y * a.y) + (a.x * a.x)) < sqrt((b.y * b.y) + (b.x * b.x)); });
 		
 		for (int i = 0; i < leg_pairs.size(); i++)
 		{
