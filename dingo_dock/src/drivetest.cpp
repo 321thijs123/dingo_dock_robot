@@ -71,7 +71,7 @@ int main(int argc, char **argv)
 	
 	// Looking for platform
 	ros::Rate rate(20.0);
-	while (!platformFound)
+	while (ros::ok() && !platformFound)
 	{
 		try
 		{
