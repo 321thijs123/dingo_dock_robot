@@ -12,8 +12,8 @@
     <include file="$(dirname)/odom_nav.launch" />
 
     <!-- Open RVIZ -->
-    <include file="$(dirname)/rviz.launch" >
+    <!--<include file="$(dirname)/rviz.launch" >
         <arg name="config" value="navigation" />
-    </include>
+    </include>-->
     
 </launch>
