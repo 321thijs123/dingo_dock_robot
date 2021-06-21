@@ -171,7 +171,7 @@ public:
 					q.setRPY(0, 0 , yaw);
 					transform.setRotation(q);
 
-					br.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "front_mount", "leg_pair_" + std::to_string(num)));
+					br.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "velodyne", "leg_pair_" + std::to_string(num)));
 
 					num++;
 
@@ -229,7 +229,7 @@ public:
 					q.setRPY(0, 0 , yaw);
 					transform.setRotation(q);
 
-					br.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "front_mount", "platform_" + std::to_string(num)));
+					br.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "velodyne", "platform_" + std::to_string(num)));
 
 					num++;
 

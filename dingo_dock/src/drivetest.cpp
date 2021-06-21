@@ -3,7 +3,14 @@
 #include <tf/transform_listener.h>
 #include "helpers/dingo_exception.cpp"
 #include <std_msgs/Float32.h>
+#include <std_msgs/Bool.h>
 #define M_PI 3.14159265358979323846
+
+bool docking = false;
+
+void cmd_dockCallback(std_msgs::Bool cmd_dock_msg){
+	docking = cmd_dock_msg.data;
+}
 
 // Determines the platform direction relative to the robot 
 double determineDirection(tf::StampedTransform tf_platform, tf::StampedTransform tf_robot)
@@ -45,6 +52,8 @@ int main(int argc, char **argv)
 
 	ros::NodeHandle n;
 
+	ros::Subscriber cmd_dock_sub = n.subscribe("cmd_precision_dock", 1, cmd_dockCallback);
+
 	ros::Publisher cmd_vel_pub = n.advertise<geometry_msgs::Twist>("cmd_vel", 20);
 	ros::Publisher platform_direction_pub = n.advertise<std_msgs::Float32>("drivetest/platform_direction", 20);
 	ros::Publisher target_direction_pub = n.advertise<std_msgs::Float32>("drivetest/target_direction", 20);
@@ -55,7 +64,7 @@ int main(int argc, char **argv)
 	ros::Publisher platform_center_distance_pub = n.advertise<std_msgs::Float32>("drivetest/center_distance", 20);
 	ros::Publisher angular_pub = n.advertise<std_msgs::Float32>("drivetest/angular", 20);
 	ros::Publisher linear_pub = n.advertise<std_msgs::Float32>("drivetest/linear", 20);
-	ros::Publisher under_platform_pub = n.advertise<std_msgs::Float32>("drivetest/under_platform", 20);
+	//ros::Publisher under_platform_pub = n.advertise<std_msgs::Float32>("drivetest/under_platform", 20);
 
 	tf::TransformListener listener;
 	
@@ -91,14 +100,14 @@ int main(int argc, char **argv)
 		rate.sleep();
 	}
 
-	bool done = false;
+	//bool done = false;
 
 	// Driving under platform
-	while (ros::ok() && !done)
+	while (ros::ok())
 	{
 
 		geometry_msgs::Twist msg;
-		
+
 		// get robot position
 		try
 		{
@@ -150,7 +159,7 @@ int main(int argc, char **argv)
 
 		if (targetDirection < -M_PI) targetDirection += 2*M_PI;
 		if (targetDirection > M_PI) targetDirection -= 2*M_PI;
-		
+
 		if (yaw_robot > M_PI) yaw_robot -= 2*M_PI;
 		if (yaw_robot < -M_PI) yaw_robot += 2*M_PI;
 
@@ -193,19 +202,19 @@ int main(int argc, char **argv)
 		if (msg.angular.z < -2) msg.angular.z = -2;
 
 		// Checks if program is done
-		if (platformCenterDistance < 0.005) done = true; 
+		//done = (platformCenterDistance < 0.005); 
 
 		// error states
 
 		// check if robot is under platform
-		bool underPlatform;
-		if (platformDistance < 0.3) underPlatform = true;
-		
+		//bool underPlatform;
+		//if (platformDistance < 0.3) underPlatform = true;
+
 		// Error for rotating much under platform
-		if (underPlatform && ( abs(yawDiff) > 5 * M_PI / 180)  )	
-		{
-			throw(DingoException("Dingo tried to turn around under platform", 0, 148)); // error: dingo turning under platform, error number = 0, linenumber = 148
-		}	
+		//if (underPlatform && ( abs(yawDiff) > 5 * M_PI / 180)  )
+		//{
+		//	throw(DingoException("Dingo tried to turn around under platform", 0, 148)); // error: dingo turning under platform, error number = 0, linenumber = 148
+		//}
 
 
 		//Show debugging info
@@ -220,7 +229,7 @@ int main(int argc, char **argv)
 				"center distance: " << platformCenterDistance << "\n" <<
 				"angular:         " << msg.angular.z << "\n" <<
 				"linear:          " << msg.linear.x << "\n" <<
-				"under platform:  " << underPlatform << "\n" <<
+		//		"under platform:  " << underPlatform << "\n" <<
 				"----------------\n";
 
 		//publish debugging info
@@ -233,7 +242,7 @@ int main(int argc, char **argv)
 		std_msgs::Float32 platform_center_distance_msg;
 		std_msgs::Float32 angular_msg;
 		std_msgs::Float32 linear_msg;
-		std_msgs::Float32 under_platform_msg;
+		//std_msgs::Float32 under_platform_msg;
 
 		platform_direction_msg.data = platform_direction;
 		target_direction_msg.data = targetDirection;
@@ -244,7 +253,7 @@ int main(int argc, char **argv)
 		platform_center_distance_msg.data = platformCenterDistance;
 		angular_msg.data = msg.angular.z;
 		linear_msg.data = msg.linear.x;
-		under_platform_msg.data = underPlatform;
+		//under_platform_msg.data = underPlatform;
 
 		platform_direction_pub.publish(platform_direction_msg);
 		target_direction_pub.publish(target_direction_msg);
@@ -255,10 +264,12 @@ int main(int argc, char **argv)
 		platform_center_distance_pub.publish(platform_center_distance_msg);
 		angular_pub.publish(angular_msg);
 		linear_pub.publish(linear_msg);
-		under_platform_pub.publish(under_platform_msg);
+		//under_platform_pub.publish(under_platform_msg);
 
-		//Publish velocity commands
-		cmd_vel_pub.publish(msg);
+		if (docking) {
+			//Publish velocity commands
+			cmd_vel_pub.publish(msg);
+		}
 
 		ros::spinOnce();
 
