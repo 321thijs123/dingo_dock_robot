@@ -1,0 +1,14 @@
+<launch>
+	<node name="velodyne_tf" pkg="tf" type="static_transform_publisher" 
+		args="0.03 0 0.038 0.785398163 0 0 front_mount velodyne 100" />
+	<include file="$(find velodyne_pointcloud)/launch/VLP16_points.launch" />
+	
+	<node name="cloudfilter" pkg="dingo_dock" type="cloudfilter" />
+	
+	<node name="dingo_dock_controller" pkg="dingo_dock" type="controller" />
+	
+	<include file="$(find dingo_dock)/launch/nav_complete.launch" />
+	<node name="nav_goal_sender" pkg="dingo_dock" type="nav_goal_sender" />
+
+	<node name="drivetest" pkg="dingo_dock" type="drivetest" />
+</launch>
