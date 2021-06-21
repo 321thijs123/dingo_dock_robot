@@ -30,3 +30,6 @@ target_link_libraries(nav_goal_sender ${catkin_LIBRARIES})
 
 add_executable(drivetest src/drivetest.cpp)
 target_link_libraries(drivetest ${catkin_LIBRARIES})
+
+add_executable(controller src/controller.cpp)
+target_link_libraries(controller ${catkin_LIBRARIES})
