@@ -16,6 +16,17 @@ void cmd_dockCallback(std_msgs::Bool cmd_dock_msg){
 	docking = cmd_dock_msg.data;
 }
 
+void waitUntilGoalReached(MoveBaseClient &ac) {
+	while (ros::ok() && !ac.waitForResult(ros::Duration(0,10000000)))
+	{
+		if (!docking){
+			ROS_INFO("Goal cancelled");
+			ac.cancelGoal();
+		}
+		ros::spinOnce();
+	}
+}
+
 int main(int argc, char **argv)
 {
   ros::init(argc, argv, "nav_goal_sender");
@@ -64,9 +75,10 @@ int main(int argc, char **argv)
 			MoveBaseClient ac("move_base", true);
 
 			//wait for the action server to come up
-			while (!ac.waitForServer(ros::Duration(5.0)))
+			while (ros::ok() && !ac.waitForServer(ros::Duration(5.0)))
 			{
 				 ROS_INFO("Waiting for the move_base action server to come up");
+				 ros::spinOnce();
 			}
 
 			move_base_msgs::MoveBaseGoal goal;
@@ -112,7 +124,7 @@ int main(int argc, char **argv)
 			ROS_INFO("Sending goal");
 			ac.sendGoal(goal);
 
- 			ac.waitForResult();
+ 			waitUntilGoalReached(ac);
 
 			if (ac.getState() == actionlib::SimpleClientGoalState::SUCCEEDED){
 				ROS_INFO("Hooray, the robot moved to the goal");
