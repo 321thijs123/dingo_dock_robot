@@ -5,3 +5,5 @@ move_base:
     footprint: [[0.276, -0.260], [0.276, 0.260], [-0.276, 0.260], [-0.276, -0.260]]
   TrajectoryPlannerROS:
     holonomic_robot: false
+
+
