@@ -92,7 +92,7 @@ int main(int argc, char **argv)
 
 		catch (tf::TransformException &ex)
 		{
-			ROS_ERROR("%s", ex.what());
+			//ROS_ERROR("%s", ex.what());
 			ros::Duration(1.0).sleep();
 			continue;
 		}
