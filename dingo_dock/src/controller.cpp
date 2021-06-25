@@ -32,6 +32,7 @@ void controllerCallback(sensor_msgs::Joy msg)
 void distanceCallback(std_msgs::Float32 distance){
 	if (distance.data < 0.01 && dock_msg.data){
 		dock_msg.data = false;
+		lift_msg.data = true;
 		ROS_INFO("DOCKING COMPLETE");
 	}
 }
@@ -46,7 +47,7 @@ int main(int argc, char **argv)
 	ros::Subscriber sub = n.subscribe("bluetooth_teleop/joy", 1, controllerCallback);
 	ros::Subscriber distance_sub = n.subscribe("/drivetest/center_distance", 1, distanceCallback);
 	ros::Publisher dock_pub = n.advertise<std_msgs::Bool>("cmd_dock", 1);
-	ros::Publisher lift_pub = n.advertise<std_msgs::Bool>("cmd_lift", 1);
+	ros::Publisher lift_pub = n.advertise<std_msgs::Bool>("lift/cmd", 1);
 
 	ros::Rate rate(20.0);
 
