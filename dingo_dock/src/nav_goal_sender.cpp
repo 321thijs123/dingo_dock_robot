@@ -16,6 +16,7 @@ void cmd_dockCallback(std_msgs::Bool cmd_dock_msg){
 	docking = cmd_dock_msg.data;
 }
 
+// While waiting until the goal is reached it checks if the goal is cancelled
 void waitUntilGoalReached(MoveBaseClient &ac) {
 	while (ros::ok() && !ac.waitForResult(ros::Duration(0,10000000)))
 	{
@@ -49,6 +50,7 @@ int main(int argc, char **argv)
 
   while (ros::ok())
   {
+	// Runs only if the docking demo is started
 	if (docking && !precision_docking){
 		tf::StampedTransform transform_legs, transform_robot;
 
@@ -60,7 +62,7 @@ int main(int argc, char **argv)
 
 		try
 		{
-
+			// Listens to the transforms of the robot and the platform
 			listener.lookupTransform("odom", "leg_pair_0", ros::Time(0), transform_legs);
 			listener.lookupTransform("odom", "base_link", ros::Time(0), transform_robot);
 
@@ -71,10 +73,10 @@ int main(int argc, char **argv)
 
 			ROS_INFO("Translation platform: %.3f, %.3f, %.3f", v_legs.getX(), v_legs.getY(), v_legs.getZ());
 
-			//tell the action client that we want to spin a thread by default
+			// Tell the action client that we want to spin a thread by default
 			MoveBaseClient ac("move_base", true);
 
-			//wait for the action server to come up
+			// Wait for the action server to come up
 			while (ros::ok() && !ac.waitForServer(ros::Duration(5.0)))
 			{
 				 ROS_INFO("Waiting for the move_base action server to come up");
@@ -82,7 +84,8 @@ int main(int argc, char **argv)
 			}
 
 			move_base_msgs::MoveBaseGoal goal;
-
+                        
+			// Set the navigation goal based on the platform position and orientation
 			goal.target_pose.header.frame_id = "odom";
 			goal.target_pose.header.stamp = ros::Time::now();
 
@@ -120,7 +123,8 @@ int main(int argc, char **argv)
 			}
 
 			goal.target_pose.pose.position.z = 0;
-
+			
+			// Send the navigation goal
 			ROS_INFO("Sending goal");
 			ac.sendGoal(goal);
 
@@ -151,7 +155,7 @@ int main(int argc, char **argv)
 	std_msgs::Bool precision_dock_msg;
 
 	precision_dock_msg.data = precision_docking;
-
+        // Publish a message for the drivetest node so it knows when it can dock
 	cmd_precision_dock_pub.publish(precision_dock_msg);
 
 	ros::spinOnce();
